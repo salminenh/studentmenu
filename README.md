@@ -24,7 +24,7 @@ Goals of the project are to learn how to use open APIs and merge the retrieved d
 
 Due to late information about the project work and tight schedule (!), the project group just tries to implement the application as fast as possible without using any methods like scrum, etc.
 
-Used technology for the application as back-end server is Node.js and the web application framework is Express.js.
+Application will be made with Node.js as back-end technology and Express.js as web-application framework.
 
 The example application, that uses the implemented API, will be made by using HTML5, CSS3 and possibly AngularJS if needed.
 
@@ -33,16 +33,16 @@ Jetbrains Webstorm is the IDE that will be used for web development.
 ## Used APIs
 
 We will use following APIs:
-AMICA API (http://apisuomi.fi/shop/json/amica-ruokalistat-api/)
-Juvenes API
-Sodexo API
+* **Amica API (http://apisuomi.fi/shop/json/amica-ruokalistat-api/)**
+* **Juvenes API**
+* **Sodexo API**
 
 
 ## Project schedule
 
-14.11. Project plan to Github and issue about project plan
-04.12. Return the assignment / project ready
-05.-09.12. Assignment presentation for assistant
+* **14.11. Project plan to Github and issue about project plan**
+* **04.12. Return the assignment / project ready**
+* **05.-09.12. Assignment presentation for assistant**
 
 ## Testing
 
@@ -50,4 +50,4 @@ The API will be tested by QA leader of the group (Daniel Kullberg)
 
 ## License
 
-Check [LICENSE.md](LICENSE.md)
+Check [LICENSE](LICENSE). License information will be added there later.
