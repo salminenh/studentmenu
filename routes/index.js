@@ -49,20 +49,22 @@ router.get('/menu/:restaurantid/:startday/:endday', function(req, res, next) {
     var restaurantid = req.params['restaurantid'];
     var startday = req.params['startday'];
     var endday = req.params['endday'];
+    var restaurantCompany = whatRestaurantCompany(restaurantid);
 
-
-    if(whatRestaurantCompany(restaurantid) === "Amica") {
+    if( restaurantCompany=== "Amica") {
         console.log("Amica");
         getAmicaMenu(restaurantid, startday, endday).then( function(result) {
             return res.status(200).json(result);
         });
-    } else if(whatRestaurantCompany(restaurantid) === "Juvenes") {
+    } else if(restaurantCompany === "Juvenes") {
         console.log("Juvenes");
         getJuvenesMenu(restaurantid, startday, endday).then( function(result) {
             return res.status(200).json(result);
         });
-    } else if(whatRestaurantCompany(restaurantid) === "Sodexo") {
-        return res.status(404).json({"message": "TODO"});
+    } else if(restaurantCompany === "Sodexo") {
+        getSodexoMenu(restaurantid, startday, endday).then( function(result) {
+            return res.status(200).json(result);
+        });
     } else {
         return res.status(404).json({"message": "Restaurant not found"});
     }
@@ -167,8 +169,8 @@ function getJuvenesMenu(kitchenId, startDay, endDay) {
         var options = {
             host: 'www.juvenes.fi',
             path: "/DesktopModules/Talents.LunchMenu/LunchMenuServices.asmx/GetMenuByWeekday?KitchenId=" +
-                    kitchenId + "&MenuTypeId=" + menuTypeId + "&Week=" + day.week()
-                    + "&Weekday=" + day.day() +"&lang=%27fi%27&format=json",
+            kitchenId + "&MenuTypeId=" + menuTypeId + "&Week=" + day.week()
+            + "&Weekday=" + day.day() +"&lang=%27fi%27&format=json",
             method: 'GET'
         };
 
@@ -181,6 +183,70 @@ function getJuvenesMenu(kitchenId, startDay, endDay) {
 
             response.on('end', function () {
                 fulfill(JSON.parse(str.slice(1, str.length).slice(0, str.length-3)));
+            });
+        });
+        req.end();
+
+        req.on('error', function (e) {
+            console.error("error:" + e);
+            reject(new Error(e));
+        });
+    });
+}
+
+
+//http://www.amica.fi/modules/json/json/Index?costNumber=[RavintolaID]&firstDay=[Aloituspv]&lastDay=[Lopetuspv]&language=fi
+// firstDay in format: 2014-06-23
+function getAmicaMenu(restaurantId, firstDay, lastDay ) {
+    return new Promise( function(fulfill, reject) {
+
+        var options = {
+            host: 'www.amica.fi',
+            path: '/modules/json/json/Index?costNumber=' + restaurantId + '&firstDay=' + firstDay + '&lastDay=' + lastDay + '&language=fi',
+            method: 'GET'
+        };
+
+        var req = http.request(options, function (response) {
+            var str = '';
+
+            response.on('data', function (chunk) {
+                str += chunk;
+            });
+
+            response.on('end', function () {
+                fulfill(JSON.parse(str));
+            });
+        });
+        req.end();
+
+        req.on('error', function (e) {
+            console.error("error:" + e);
+            reject(new Error(e));
+        });
+    });
+}
+
+//
+function getSodexoMenu(restaurantId, firstDay, lastDay) {
+    return new Promise( function(fulfill, reject) {
+
+        var day = moment(firstDay);
+
+        var options = {
+            host: 'www.sodexo.fi',
+            path: "/ruokalistat/output/daily_json/" + restaurantId + "/" + day.format('YYYY/MM/DD') + "/fi",
+            method: 'GET'
+        };
+        
+        var req = http.request(options, function (response) {
+            var str = '';
+
+            response.on('data', function (chunk) {
+                str += chunk;
+            });
+
+            response.on('end', function () {
+                fulfill(JSON.parse(str));
             });
         });
         req.end();
@@ -226,38 +292,6 @@ function getLocation(address, number, postalcode, city) {
 }
 
 
-//http://www.amica.fi/modules/json/json/Index?costNumber=[RavintolaID]&firstDay=[Aloituspv]&lastDay=[Lopetuspv]&language=fi
-// firstDay in format: 2014-06-23
-function getAmicaMenu(restaurantId, firstDay, lastDay ) {
-    return new Promise( function(fulfill, reject) {
-
-        var options = {
-            host: 'www.amica.fi',
-            path: '/modules/json/json/Index?costNumber=' + restaurantId + '&firstDay=' + firstDay + '&lastDay=' + lastDay + '&language=fi',
-            method: 'GET'
-        };
-
-        var req = http.request(options, function (response) {
-            var str = '';
-
-            response.on('data', function (chunk) {
-                str += chunk;
-            });
-
-            response.on('end', function () {
-                fulfill(JSON.parse(str));
-            });
-        });
-        req.end();
-
-        req.on('error', function (e) {
-            console.error("error:" + e);
-            reject(new Error(e));
-        });
-    });
-}
-
-
 // Returns the restaurants in a list.
 function getRestaurants() {
 
@@ -265,7 +299,6 @@ function getRestaurants() {
     var Reaktori = {name: "Reaktori", restaurantId: "0812"};
     var Minerva = {name: "Minerva", restaurantId: "0815"};
     var Pirteria = {name: "Pirteria", restaurantId: "0823"};
-
 
     // Fills the restaurant infos here
     // Juvenes restaurants
@@ -284,7 +317,9 @@ function getRestaurants() {
     var FrenckellSåås = {name: "Frenckell / Såås Bar", restaurantId: "33", menu: "77" };
 
     // Sodexo restaurants
-    var Hertsi = {name: "Hertsi", restaurantId: "yy"};
+    var Hertsi = {name: "Hertsi", restaurantId: "12812"};
+    var Linna = {name: "Linna", restaurantId: "92"};
+    var Erkkeri = {name: "Erkkeri", restaurantId: "100"};
 
 
     return [{
@@ -297,7 +332,7 @@ function getRestaurants() {
             KonehuoneSåås, Ziberia, Frenckell, FrenckellSåås]
     }, {
         companyName: "Sodexo",
-        restaurants: [Hertsi]
+        restaurants: [Hertsi, Linna, Erkkeri]
     }];
 }
 
