@@ -4,6 +4,9 @@ var https = require('https');
 var http = require('http');
 var Promise = require('promise');
 var moment = require('moment');
+var debug = require('debug');
+
+var companiesGlobal = getRestaurants();
 
 
 /* GET home page. */
@@ -71,50 +74,30 @@ router.get('/menu/:restaurantid/:startday/:endday', function(req, res, next) {
 
 });
 
-/* GET get all the menus of all restaurants in certain dates. */
-router.get('/all/menus/:startday/:endday', function(req, res, next) {
+/* GET get all the menus of all restaurants in certain date. */
+router.get('/all/menus/:day/', function(req, res, next) {
 
-    var startday = req.params['startday'];
-    var endday = req.params['endday'];
+    var day = req.params['day'];
 
-    var menus = [
-        {"Juvenes": []},
-        {"Amica": []},
-        {"Sodexo": []}
-    ];
-    var companies = getRestaurants();
+    var menus = {
+        "Juvenes": [],
+        "Amica": [],
+        "Sodexo": []
+    };
 
-    return new Promise(function(fulfill, reject) {
-
-        for (var i = 0; i < companies.length; ++i) {
-            for (var j = 0; j < companies[i].restaurants.length; ++j) {
-
-                var company = companies[i].companyName;
-
-                if (company === "Amica") {
-                    getAmicaMenu(companies[i].restaurants[j].restaurantId, startday, endday).then(function (result) {
-
-                        menus.Amica.push(result);
-                    });
-                } else if (company === "Juvenes") {
-                    getJuvenesMenu(companies[i].restaurants[j].restaurantId, startday, endday).then(function (result) {
-                        menus.Juvenes.push(result);
-                    });
-                } else if (company === "Sodexo") {
-                    //return res.status(404).json({"message": "TODO"});
-                } else {
-                    //return res.status(404).json({"message": "Restaurant not found"});
-                }
-
-                if(i+1 === companies.length && j+1 === companies[i].restaurants.length) {
-                    fulfill(menus);
-                }
-            }
-        }
-    }).then( function(menusReturn) {
-        return res.status(200).json({menus: menusReturn});
+    getAllAmicaMenus(day, menus).then( function(menus) {
+        getAllJuvenesMenus(day, menus).then( function(menus) {
+            getAllSodexoMenus(day, menus).then( function(menus) {
+                return res.status(200).json({menus: menus});
+            }).catch( function(err) {
+                return res.status(500).json({error: err.message});
+            });
+        }).catch( function(err) {
+            return res.status(500).json({error: err.message});
+        });
+    }).catch( function(err) {
+        return res.status(500).json({error: err.message});
     });
-
 });
 
 /* GET API documentation */
@@ -226,7 +209,7 @@ function getAmicaMenu(restaurantId, firstDay, lastDay ) {
     });
 }
 
-//
+// Get sodexo menu for a day
 function getSodexoMenu(restaurantId, firstDay, lastDay) {
     return new Promise( function(fulfill, reject) {
 
@@ -237,7 +220,7 @@ function getSodexoMenu(restaurantId, firstDay, lastDay) {
             path: "/ruokalistat/output/daily_json/" + restaurantId + "/" + day.format('YYYY/MM/DD') + "/fi",
             method: 'GET'
         };
-        
+
         var req = http.request(options, function (response) {
             var str = '';
 
@@ -255,6 +238,128 @@ function getSodexoMenu(restaurantId, firstDay, lastDay) {
             console.error("error:" + e);
             reject(new Error(e));
         });
+    });
+}
+
+
+
+// ********************************************************************************************************************
+// All menus functions
+// ********************************************************************************************************************
+
+function getAllSodexoMenus(firstDay, menus) {
+    return new Promise( function(fulfill, reject) {
+        var SodexoRestaurants = companiesGlobal[2].restaurants;
+        var day = moment(firstDay);
+
+        for( var i = 0; i < SodexoRestaurants.length; ++i) {
+
+            var options = {
+                host: 'www.sodexo.fi',
+                path: "/ruokalistat/output/daily_json/" + SodexoRestaurants[i].restaurantId + "/" + day.format('YYYY/MM/DD') + "/fi",
+                method: 'GET'
+            };
+
+            var req = http.request(options, function (response) {
+                var str = '';
+
+                response.on('data', function (chunk) {
+                    str += chunk;
+                });
+
+                response.on('end', function () {
+                    menus.Sodexo.push(JSON.parse(str));
+                    if(SodexoRestaurants.length === menus.Sodexo.length) {
+                        fulfill(menus);
+                    }
+                });
+            });
+            req.end();
+
+            req.on('error', function (e) {
+                console.error("error:" + e);
+                reject(new Error(e));
+            });
+
+        }
+    });
+}
+
+function getAllJuvenesMenus(firstDay, menus) {
+    return new Promise( function(fulfill, reject) {
+        var JuvenesRestaurants = companiesGlobal[1].restaurants;
+        var day = moment(firstDay);
+
+        for( var i = 0; i < JuvenesRestaurants.length; ++i) {
+
+            var options = {
+                host: 'www.juvenes.fi',
+                path: "/DesktopModules/Talents.LunchMenu/LunchMenuServices.asmx/GetMenuByWeekday?KitchenId=" +
+                JuvenesRestaurants[i].restaurantId + "&MenuTypeId=" + JuvenesRestaurants[i].menu + "&Week=" + day.week()
+                + "&Weekday=" + day.day() +"&lang=%27fi%27&format=json",
+                method: 'GET'
+            };
+
+            var req = http.request(options, function (response) {
+                var str = '';
+
+                response.on('data', function (chunk) {
+                    str += chunk;
+                });
+
+                response.on('end', function () {
+                    menus.Juvenes.push(JSON.parse(str.slice(1, str.length).slice(0, str.length-3)));
+                    if(JuvenesRestaurants.length === menus.Juvenes.length) {
+                        fulfill(menus);
+                    }
+                });
+            });
+            req.end();
+
+            req.on('error', function (e) {
+                console.error("error:" + e);
+                reject(new Error(e));
+            });
+
+        }
+
+    });
+}
+
+function getAllAmicaMenus(firstDay, menus) {
+    return new Promise( function(fulfill, reject) {
+        var AmicaRestaurants = companiesGlobal[0].restaurants;
+
+        for( var i = 0; i < AmicaRestaurants.length; ++i) {
+
+            var options = {
+                host: 'www.amica.fi',
+                path: '/modules/json/json/Index?costNumber=' + AmicaRestaurants[i].restaurantId + '&firstDay=' + firstDay + '&lastDay=' + firstDay + '&language=fi',
+                method: 'GET'
+            };
+
+            var req = http.request(options, function (response) {
+                var str = '';
+
+                response.on('data', function (chunk) {
+                    str += chunk;
+                });
+
+                response.on('end', function () {
+                    menus.Amica.push(JSON.parse(str));
+                    if(AmicaRestaurants.length === menus.Amica.length) {
+                        fulfill(menus);
+                    }
+                });
+            });
+            req.end();
+
+            req.on('error', function (e) {
+                console.error("error:" + e);
+                reject(new Error(e));
+            });
+        }
+
     });
 }
 
