@@ -47,26 +47,23 @@ router.get('/restaurantinfo/:restaurantid', function(req, res, next) {
 });
 
 /* GET get menu from one restaurant in certain dates. */
-router.get('/menu/:restaurantid/:startday/:endday', function(req, res, next) {
+router.get('/menu/:restaurantid/:startday/', function(req, res, next) {
 
     var restaurantid = req.params['restaurantid'];
     var startday = req.params['startday'];
-    var endday = req.params['endday'];
     var restaurantCompany = whatRestaurantCompany(restaurantid);
 
     if( restaurantCompany=== "Amica") {
-        console.log("Amica");
-        getAmicaMenu(restaurantid, startday, endday).then( function(result) {
-            return res.status(200).json(result);
+        getAmicaMenu(restaurantid, startday).then( function(result) {
+            return res.status(200).json(amicaMenuToGlobalFormat(result));
         });
     } else if(restaurantCompany === "Juvenes") {
-        console.log("Juvenes");
-        getJuvenesMenu(restaurantid, startday, endday).then( function(result) {
-            return res.status(200).json(result);
+        getJuvenesMenu(restaurantid, startday).then( function(result) {
+            return res.status(200).json(juvenesMenuToGlobalFormat(result));
         });
     } else if(restaurantCompany === "Sodexo") {
-        getSodexoMenu(restaurantid, startday, endday).then( function(result) {
-            return res.status(200).json(result);
+        getSodexoMenu(restaurantid, startday).then( function(result) {
+            return res.status(200).json(sodexoMenuToGlobalFormat(result));
         });
     } else {
         return res.status(404).json({"message": "Restaurant not found"});
@@ -130,7 +127,7 @@ function whatRestaurantCompany(restaurantId) {
 
 // Returns Juvenes menu by kitchen and day
 // startDay in format: 2014-06-23
-function getJuvenesMenu(kitchenId, startDay, endDay) {
+function getJuvenesMenu(kitchenId, startDay) {
 
     return new Promise( function(fulfill, reject) {
 
@@ -180,12 +177,12 @@ function getJuvenesMenu(kitchenId, startDay, endDay) {
 
 //http://www.amica.fi/modules/json/json/Index?costNumber=[RavintolaID]&firstDay=[Aloituspv]&lastDay=[Lopetuspv]&language=fi
 // firstDay in format: 2014-06-23
-function getAmicaMenu(restaurantId, firstDay, lastDay ) {
+function getAmicaMenu(restaurantId, firstDay ) {
     return new Promise( function(fulfill, reject) {
 
         var options = {
             host: 'www.amica.fi',
-            path: '/modules/json/json/Index?costNumber=' + restaurantId + '&firstDay=' + firstDay + '&lastDay=' + lastDay + '&language=fi',
+            path: '/modules/json/json/Index?costNumber=' + restaurantId + '&firstDay=' + firstDay + '&lastDay=' + firstDay + '&language=fi',
             method: 'GET'
         };
 
@@ -210,7 +207,7 @@ function getAmicaMenu(restaurantId, firstDay, lastDay ) {
 }
 
 // Get sodexo menu for a day
-function getSodexoMenu(restaurantId, firstDay, lastDay) {
+function getSodexoMenu(restaurantId, firstDay) {
     return new Promise( function(fulfill, reject) {
 
         var day = moment(firstDay);
@@ -240,7 +237,6 @@ function getSodexoMenu(restaurantId, firstDay, lastDay) {
         });
     });
 }
-
 
 
 // ********************************************************************************************************************
@@ -285,6 +281,7 @@ function getAllSodexoMenus(firstDay, menus) {
     });
 }
 
+//
 function getAllJuvenesMenus(firstDay, menus) {
     return new Promise( function(fulfill, reject) {
         var JuvenesRestaurants = companiesGlobal[1].restaurants;
@@ -363,6 +360,103 @@ function getAllAmicaMenus(firstDay, menus) {
     });
 }
 
+// ********************************************************************************************************************
+// Menus to same formats
+// ********************************************************************************************************************
+
+// Formats in all these are like:
+
+var new_format_menu = {
+    restaurant: "",
+    link: "",
+    open_hours: "",
+    set_menus: [
+        {
+            name: "",
+            price: "",
+            components: ["", ""],
+            diets: ""
+        }
+    ]
+};
+
+
+function amicaMenuToGlobalFormat(menu) {
+
+    var new_format_menu = {
+        restaurant: "",
+        link: "",
+        open_hours: "",
+        set_menus: []
+    };
+
+    new_format_menu.restaurant = menu.RestaurantName;
+    new_format_menu.link = menu.RestaurantUrl;
+    new_format_menu.open_hours = menu.MenusForDays[0].LunchTime;
+
+    for(var i = 0; i < menu.MenusForDays[0].SetMenus.length; ++i) {
+        var setMenu = {};
+        var value = menu.MenusForDays[0].SetMenus[i];
+        setMenu.name = value.Name;
+        setMenu.price = value.Price;
+        setMenu.components = value.Components;
+        setMenu.diets = "";
+        new_format_menu.set_menus.push(setMenu);
+    }
+    return new_format_menu;
+}
+
+
+function sodexoMenuToGlobalFormat(menu) {
+
+    var new_format_menu = {
+        restaurant: "",
+        link: "",
+        open_hours: "",
+        set_menus: []
+    };
+
+    new_format_menu.restaurant = menu['meta']['ref_title'];
+    new_format_menu.link = menu['meta']['ref_url'];
+    new_format_menu.open_hours = "";
+
+    for(var i = 0; i < menu['courses'].length; ++i) {
+        var setMenu = {};
+        var value = menu['courses'][i];
+        setMenu.name = value.title_fi;
+        setMenu.price = value.price;
+        setMenu.components = [];
+        setMenu.components.push(value.desc_fi);
+        setMenu.diets = value.properties;
+        new_format_menu.set_menus.push(setMenu);
+    }
+    return new_format_menu;}
+
+function juvenesMenuToGlobalFormat(menu) {
+
+    console.log(menu['d']['"KitchenName"']);
+    var new_format_menu = {
+        restaurant: "",
+        link: "",
+        open_hours: "",
+        set_menus: []
+    };
+
+    new_format_menu.restaurant = menu['d']['"KitchenName"'];
+    new_format_menu.link = "";
+    new_format_menu.open_hours = "";
+
+    for(var i = 0; i < menu['d']['MenuItems'].length; ++i) {
+        var setMenu = {};
+        var value = menu['d']['MenuItems'][i];
+        setMenu.name = value.Name;
+        setMenu.price = value.Price;
+        setMenu.components = [value.Ainesosat];
+        setMenu.diets = value.Diets;
+        new_format_menu.set_menus.push(setMenu);
+    }
+    return new_format_menu;
+}
 
 // Returns the coordinates of an address
 function getLocation(address, number, postalcode, city) {
