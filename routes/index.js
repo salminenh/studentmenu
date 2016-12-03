@@ -10,11 +10,11 @@ var companiesGlobal = getRestaurants();
 
 
 /* GET home page. */
-router.get('/exampleapp', function(req, res, next) {
+router.get('/', function(req, res, next) {
     getLocation("Korkeakoulunkatu", "7", "33720", "Tampere").then( function(result) {
         res.render('index', {
-            title: 'Express',
-            text: result.results
+            title: 'Student menu',
+            text: result
         });
     });
 });
@@ -509,11 +509,11 @@ function getRestaurants() {
     var Arvo = {name: 'Arvo', restaurantId: "5", menu: "60"};
     var CafeLeaFusion = {name: "Café Lea (Fusion Kitchen)", restaurantId: "50026", menu: "3"};
     var CafeLeaSalad = {name: "Café Lea (My Salad)", restaurantId: "50026", menu: "76"};
-    var KonehuoneSåås = {name: "Café Konehuone / Såås bar", restaurantId: "60038", menu: "77" };
+    var KonehuoneSaas = {name: "Café Konehuone / Såås bar", restaurantId: "60038", menu: "77" };
     var KonehuoneFusion = {name: "Café Konehuone / Fusion", restaurantId: "60038", menu: "3" };
     var Ziberia = {name: "Ziberia", restaurantId: "11", menu: "60" };
     var Frenckell = {name: "Frenckell", restaurantId: "33", menu: "60"};
-    var FrenckellSåås = {name: "Frenckell / Såås Bar", restaurantId: "33", menu: "77" };
+    var FrenckellSaas = {name: "Frenckell / Såås Bar", restaurantId: "33", menu: "77" };
 
     // Sodexo restaurants
     var Hertsi = {name: "Hertsi", restaurantId: "12812"};
@@ -528,7 +528,7 @@ function getRestaurants() {
         companyName: "Juvenes",
         restaurants: [Newton, TAYravintola, TAYravintolaVEGE, TAYCafeCampus, CafePinni, Arvo,
             CafeLeaFusion, CafeLeaSalad, KonehuoneFusion,
-            KonehuoneSåås, Ziberia, Frenckell, FrenckellSåås]
+            KonehuoneSaas, Ziberia, Frenckell, FrenckellSaas]
     }, {
         companyName: "Sodexo",
         restaurants: [Hertsi, Linna, Erkkeri]
