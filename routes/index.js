@@ -5,6 +5,7 @@ var http = require('http');
 var Promise = require('promise');
 var moment = require('moment');
 var debug = require('debug');
+var path = require('path');
 
 var companiesGlobal = getRestaurants();
 
@@ -19,11 +20,39 @@ router.get('/', function(req, res, next) {
 });
 
 /* GET all the restaurants. */
+/**
+ * @api {get} /restaurants Request restaurants and their information
+ * @apiName GetRestaurants
+ * @apiGroup Restaurants
+ *
+ *
+ * @apiSuccess {Object[]} companies Array of companies
+ * @apiSuccess {String} companies.companyName  Name of the company
+ * @apiSuccess {String} companies.companyName  Name of the company
+ * @apiSuccess {String} companies.restaurants  Restaurants of the company in Tampere
+ * @apiSuccess {String} companies.restaurants.name  Name of the restaurant
+ * @apiSuccess {Number} companies.restaurants.restaurantId  Id of the restaurant
+ *
+ */
 router.get('/restaurants', function(req, res, next) {
-    return res.status(200).json({restaurants: getRestaurants()});
+    return res.status(200).json({companies: getRestaurants()});
 });
 
+
 /* GET restaurant info of one restaurant. */
+/**
+ * @api {get} /restaurantinfo/:restaurantid Get information of one restaurant
+ * @apiName GetRestaurantInfo
+ * @apiGroup Restaurants
+ *
+ * @apiParam  {Number} restaurantid Restaurants unique ID.
+ *
+ * @apiSuccess {String} name  Name of the restaurant
+ * @apiSuccess {Number} restaurantId Id of the restaurant
+ * @apiSuccess {Number} menu Menu type id of the restaurant. Only with Juvenes restaurants.
+ *
+ * @apiError RestaurantNotFound  Restaurant not found.
+ */
 router.get('/restaurantinfo/:restaurantid', function(req, res, next) {
     var restaurantid = req.params['restaurantid'];
 
@@ -40,13 +69,32 @@ router.get('/restaurantinfo/:restaurantid', function(req, res, next) {
     if(restaurant) {
         return res.status(200).json(restaurant);
     } else {
-        return res.status(404).json({message: "Restaurant not found"});
+        return res.status(404).json({error: "RestaurantNotFound"});
     }
 
 });
 
 /* GET get menu from one restaurant in certain dates. */
-router.get('/menu/:restaurantid/:date/', function(req, res, next) {
+/**
+ * @api {get} /menu/:restaurantid/:date Get menu of one restaurant for certain date
+ * @apiName GetRestaurantMenu
+ * @apiGroup Menus
+ *
+ * @apiParam  {Number} restaurantid Restaurants unique ID.
+ * @apiParam  {Date} date Date when the menu is wanted. Format must be YYYY-MM-DD
+ *
+ * @apiSuccess {String} restaurant  Name of the restaurant
+ * @apiSuccess {String} link Link to the website of the restaurant
+ * @apiSuccess {String} open_hours Opening hours of the restaurant
+ * @apiSuccess {Object[]} set_menus Array of menu objects
+ * @apiSuccess {String} set_menus.name Name of the menu.
+ * @apiSuccess {String} set_menus.price Price of the menu.
+ * @apiSuccess {String[]} set_menus.components Array of components of the menu.
+ * @apiSuccess {String} set_menus.diets Diets of the menu.
+ *
+ * @apiError RestaurantNotFound  Restaurant not found.
+ */
+router.get('/menu/:restaurantid/:date', function(req, res, next) {
 
     var restaurantid = req.params['restaurantid'];
     var date = req.params['date'];
@@ -70,8 +118,30 @@ router.get('/menu/:restaurantid/:date/', function(req, res, next) {
 
 });
 
+
 /* GET get all the menus of all restaurants in certain date. */
-router.get('/all/menus/:date/', function(req, res, next) {
+/**
+ * @api {get} /all/menus/:date Get all menus for certain date
+ * @apiName GetAllMenus
+ * @apiGroup Menus
+ *
+ * @apiParam  {Date} date Date when the menu is wanted. Format must be YYYY-MM-DD
+ *
+ * @apiSuccess {Object[]} menus Array of company objecs
+ * @apiSuccess {Object[]} menus.Juvenes Menus from Juvenes
+ * @apiSuccess {Object[]} menus.Amica  Menus of Amica
+ * @apiSuccess {Object[]} menus.Sodexo  Menus of Sodexo
+ * @apiSuccess {String} menus.Sodexo.restaurant  Name of the restaurant
+ * @apiSuccess {String} menus.Sodexo.link Link to the website of the restaurant
+ * @apiSuccess {String} menus.Sodexo.open_hours Opening hours of the restaurant
+ * @apiSuccess {Object[]} menus.Sodexo.set_menus Array of menu objects
+ * @apiSuccess {String} menus.Sodexo.set_menus.name Name of the menu.
+ * @apiSuccess {String} menus.Sodexo.set_menus.price Price of the menu.
+ * @apiSuccess {String[]} menus.Sodexo.set_menus.components Array of components of the menu.
+ * @apiSuccess {String} menus.Sodexo.set_menus.diets Diets of the menu.
+ *
+ */
+router.get('/all/menus/:date', function(req, res, next) {
 
     var date = req.params['date'];
 
@@ -82,23 +152,35 @@ router.get('/all/menus/:date/', function(req, res, next) {
     };
 
     getAllAmicaMenus(date, menus).then( function(menus) {
-        getAllJuvenesMenus(date, menus).then( function(menus) {
+        //getAllJuvenesMenus(date, menus).then( function(menus) {
             getAllSodexoMenus(date, menus).then( function(menus) {
+                for(var i = 0; i < menus.Juvenes.length; ++i ) {
+                    menus.Juvenes[i] = juvenesMenuToGlobalFormat(JSON.stringify(menus.Juvenes[i]));
+                }
                 return res.status(200).json({menus: menus});
             }).catch( function(err) {
                 return res.status(500).json({error: err.message});
             });
-        }).catch( function(err) {
+        /*}).catch( function(err) {
             return res.status(500).json({error: err.message});
-        });
+        });*/
     }).catch( function(err) {
         return res.status(500).json({error: err.message});
     });
 });
 
 /* GET API documentation */
+/**
+ * @api {get} /api_documentation Get API documentation
+ * @apiName GetAPIDocumentation
+ * @apiGroup Documentation
+ *
+ *
+ * @apiSuccess {HTML} API documentation as HTML file.
+ *
+ */
 router.get('/api_documentation', function(req, res, next) {
-    return res.render('index', { title: 'Express' });
+    res.sendFile(path.join(__dirname + '/apidoc/index.html'));
 });
 
 
@@ -126,30 +208,30 @@ function whatRestaurantCompany(restaurantId) {
 function getRestaurants() {
 
     // Amica restaurants
-    var Reaktori = {name: "Reaktori", restaurantId: "0812"};
-    var Minerva = {name: "Minerva", restaurantId: "0815"};
-    var Pirteria = {name: "Pirteria", restaurantId: "0823"};
+    var Reaktori = {name: "Reaktori", restaurantId: "0812", menu: "" };
+    var Minerva = {name: "Minerva", restaurantId: "0815", menu: "" };
+    var Pirteria = {name: "Pirteria", restaurantId: "0823", menu: "" };
 
     // Fills the restaurant infos here
     // Juvenes restaurants
     var Newton = {name: "Newton", restaurantId: "6", menu: "60" };
-    var TAYravintola = {name: "Yliopiston Ravintola", restaurantId: "13", menu: "6" };
-    var TAYravintolaVEGE = {name: "Yliopiston Ravintola / VegeBar", restaurantId: "13", menu: "5" };
+    //var TAYravintola = {name: "Yliopiston Ravintola", restaurantId: "13", menu: "6" };
+    //var TAYravintolaVEGE = {name: "Yliopiston Ravintola / VegeBar", restaurantId: "13", menu: "5" };
     var TAYCafeCampus = {name: "Café Campus", restaurantId: "130019", menu: "23" };
     var CafePinni = {name: "Café Pinni", restaurantId: "130016", menu: "60"};
     var Arvo = {name: 'Arvo', restaurantId: "5", menu: "60"};
     var CafeLeaFusion = {name: "Café Lea (Fusion Kitchen)", restaurantId: "50026", menu: "3"};
-    var CafeLeaSalad = {name: "Café Lea (My Salad)", restaurantId: "50026", menu: "76"};
+    //var CafeLeaSalad = {name: "Café Lea (My Salad)", restaurantId: "50026", menu: "76"};
     var KonehuoneSaas = {name: "Café Konehuone / Såås bar", restaurantId: "60038", menu: "77" };
-    var KonehuoneFusion = {name: "Café Konehuone / Fusion", restaurantId: "60038", menu: "3" };
+    //var KonehuoneFusion = {name: "Café Konehuone / Fusion", restaurantId: "60038", menu: "3" };
     var Ziberia = {name: "Ziberia", restaurantId: "11", menu: "60" };
     var Frenckell = {name: "Frenckell", restaurantId: "33", menu: "60"};
-    var FrenckellSaas = {name: "Frenckell / Såås Bar", restaurantId: "33", menu: "77" };
+    //var FrenckellSaas = {name: "Frenckell / Såås Bar", restaurantId: "33", menu: "77" };
 
     // Sodexo restaurants
-    var Hertsi = {name: "Hertsi", restaurantId: "12812"};
-    var Linna = {name: "Linna", restaurantId: "92"};
-    var Erkkeri = {name: "Erkkeri", restaurantId: "100"};
+    var Hertsi = {name: "Hertsi", restaurantId: "12812", menu: "" };
+    var Linna = {name: "Linna", restaurantId: "92", menu: "" };
+    var Erkkeri = {name: "Erkkeri", restaurantId: "100", menu: "" };
 
 
     return [{
@@ -157,18 +239,13 @@ function getRestaurants() {
         restaurants: [Reaktori, Minerva, Pirteria]
     }, {
         companyName: "Juvenes",
-        restaurants: [Newton, TAYravintola, TAYravintolaVEGE, TAYCafeCampus, CafePinni, Arvo,
-            CafeLeaFusion, CafeLeaSalad, KonehuoneFusion,
-            KonehuoneSaas, Ziberia, Frenckell, FrenckellSaas]
+        restaurants: [Newton, /*TAYravintola, /*TAYravintolaVEGE,*/ TAYCafeCampus, CafePinni, Arvo,
+            CafeLeaFusion, /*CafeLeaSalad, KonehuoneFusion,*/
+            KonehuoneSaas, Ziberia, Frenckell/*, FrenckellSaas*/]
     }, {
         companyName: "Sodexo",
         restaurants: [Hertsi, Linna, Erkkeri]
     }];
-}
-
-// Returns API info of restaurant.
-function getAPIinformation(restaurant) {
-
 }
 
 
@@ -189,13 +266,14 @@ function getJuvenesMenu(restaurantId, date) {
         for (var i = 0; i < companies.length; ++i) {
             if(companies[i].companyName === "Juvenes") {
                 for (var j = 0; j < companies[i].restaurants.length; ++j) {
-                    if (restaurantId = companies[i].restaurants[j].restaurantId) {
+                    if (restaurantId === companies[i].restaurants[j].restaurantId) {
                         menuTypeId = companies[i].restaurants[j].menu;
                         break;
                     }
                 }
             }
         }
+
 
         var options = {
             host: 'www.juvenes.fi',
@@ -356,7 +434,7 @@ function getAllJuvenesMenus(date, menus) {
                 });
 
                 response.on('end', function () {
-                    menus.Juvenes.push(juvenesMenuToGlobalFormat(JSON.parse(str.slice(1, str.length).slice(0, str.length-3))));
+                    menus.Juvenes.push(JSON.parse((str.slice(1, str.length).slice(0, str.length-3))));
                     if(JuvenesRestaurants.length === menus.Juvenes.length) {
                         fulfill(menus);
                     }
@@ -458,8 +536,8 @@ function amicaMenuToGlobalFormat(menu) {
 function sodexoMenuToGlobalFormat(menu) {
 
     var new_format_menu = {
-        restaurant: menu['meta']['ref_title'],
-        link: menu['meta']['ref_url'],
+        restaurant: menu['meta']['ref_title'] || "",
+        link: menu['meta']['ref_url']  || "",
         open_hours: "",
         set_menus: []
     };
@@ -481,7 +559,7 @@ function juvenesMenuToGlobalFormat(menu) {
 
     parsed_menu = JSON.parse(menu['d']);
     var new_format_menu = {
-        restaurant: parsed_menu.KitchenName,
+        restaurant: parsed_menu.KitchenName || "",
         link: "",
         open_hours: "",
         set_menus: []
