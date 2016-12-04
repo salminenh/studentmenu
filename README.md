@@ -6,6 +6,25 @@ API for student restaurant locations and menus in Tampere.
 
 The project consists of implementing an API that provides information about student restaurants in Tampere. API will provide the locations and menus of the restaurants. The menu data will be retrieved from restaurants own open APIs.
 
+## Instructions
+
+Instructions how to use API and example application:
+
+Node.js and npm must be installed
+
+> run **git clone https://github.com/salminenh/studentmenu.git**
+>
+> go to folder**studentmenu**
+>
+> run **npm install**
+>
+> run **npm start**
+>
+> open url **http://localhost:3000/** in browser
+>
+> check url **http://localhost:3000/api_documentation** to see API specifications
+
+
 ## Authors
 
 * **Mikko Knuuttila** - *Project manager* - [miksakki](https://github.com/miksakki)
