@@ -12,8 +12,14 @@
 
 ## Henri
 #### What I did
+* Created project to GitHub
+* Created issue to inspect project plan
+* Invited group members and required cource stuff to GitHub project
+* Participated on HTTP API planning
 
 #### What I planned for week 46
+* More specific specs for HTTP API
+* Help Mikko with project plan
 
 ## Daniel
 #### What I did
@@ -34,8 +40,13 @@
 
 ## Henri
 #### What I did
+* Checked if Ihantola had accepted the invite to be able to assign issue of project plan inspection to him.
+* Small fixes to HTTP API plans
+* Research of restaurant apis
+* Finalized and reviewed project plan
 
 #### What I planned for week 47
+* Desing the front-end demo app a bit
 
 ## Daniel
 #### What I did
@@ -57,8 +68,11 @@
 
 ## Henri
 #### What I did
+* Research & Studing needed apis with Mikko
+* Created some ideas for the front-end demo app
 
 #### What I planned for week 48
+* Implement the front-end demo app
 
 ## Daniel
 #### What I did
@@ -80,6 +94,10 @@
 
 ## Henri
 #### What I did
+* Implemented the front-end demo app which shows some of the data our HTTP API provides
+* Configured test server environment, subdomain and DNS records 
+* Setup PM2 to manage demo app
+* Published demo app on http://studentmenu.megakoodarit.net
 
 
 ## Daniel
