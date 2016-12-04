@@ -28,23 +28,34 @@
 </head>
 
 <body>
-
     <div ng-app="restaurantApp" ng-controller="restaurantCtrl">
+        <!-- Fixed navbar -->
+        <nav class="navbar navbar-default navbar-fixed-top">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#"><%= title %></a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse" style="padding-right: 20px;">
+                <ul class="nav navbar-nav navbar-right">
+                    <li ng-repeat="company in companies"><a href="#" ng-click="companySelected(company)">{{ company }}</a></li>
+                </ul>
+            </div>
+        </nav>
 
+        <br><br>
+
+        <!-- Restaurant tile: -->
+        <div ng-repeat="restaurant in restaurants" class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
+            <h4><a href="{{ menus[restaurant.restaurantId].link }}">{{ restaurant.name }}</a></h4>
+            <p>{{ restaurant }}</p>
+            <p>{{ menus[restaurant.restaurantId].set_menus }}</p>
+        </div>
     </div>
-
-<h1><%= title %></h1>
-<p>Welcome to <%= title %></p>
-<p> <%= text %></p>
-
-<% for(var i = 0; i < restaurants.length; ++i) { %>
-
-<h2><%= restaurants[i].companyName %></h2>
-
-<% for(var j = 0; j < restaurants[i].restaurants.length; ++j) { %>
-<h4><%= restaurants[i].restaurants[j].name %></h4>
-<% } %>
-<% } %>
 
 <script>
     'use strict';
@@ -59,6 +70,101 @@
     app.controller("restaurantCtrl", function ($scope, $log, $http, $location, $interval, $sessionStorage, moment) {
         moment.locale('fi');
 
+        $scope.data = [];
+        $scope.companies = [];
+        $scope.restaurants = [];
+
+        $scope.menus = {};
+
+        $scope.selectedCompany;
+
+        getRestaurants();
+
+        $scope.getRestaurants = function (company) {
+            if($scope.data.restaurants) {
+                // Find right company:
+                for(var i = 0; i<$scope.data.restaurants.length; ++i) {
+                    if($scope.data.restaurants[i].companyName == company) {
+                        return $scope.data.restaurants[i].restaurants;
+                    }
+                }
+            }
+            return [];
+        }
+
+        $scope.companySelected = function (company) {
+            $scope.selectedCompany = company;
+        }
+
+        $scope.$watch('selectedCompany', function () {
+            console.log("$scope.selectedCompany has changed: " + $scope.selectedCompany);
+            $scope.restaurants = $scope.getRestaurants($scope.selectedCompany);
+
+            console.log($scope.restaurants);
+
+            // TODO: change company view:
+        }, true);
+
+        $scope.$watch('restaurants', function () {
+            console.log("$scope.restaurants has changed: " + $scope.restaurants);
+
+            for(var i = 0; i<$scope.restaurants.length; ++i) {
+                var restaurantID = $scope.restaurants[i].restaurantId;
+                getRestaurantMenu(restaurantID);
+            }
+        }, true);
+
+        function parseCompanies(data) {
+            var companies = [];
+            data.restaurants.forEach(function (value) {
+                if(value.hasOwnProperty("companyName")) {
+                    companies.push(value.companyName);
+                }
+            })
+            console.log(companies);
+            return companies;
+        }
+
+        function getRestaurantMenu(restaurantID) {
+            var date = new moment().utc().hour(0).minutes(0).second(0).millisecond(0).add(1, "d");
+
+            var protocol = $location.protocol();
+            var host     = $location.host();
+            var port     = $location.port() != 80 ? ":" + $location.port() : "";
+            var path     = "menu/" + restaurantID + "/" + date.format("YYYY-MM-DD");
+            var url      = protocol + "://" + host + port + "/" + path;
+
+            $http.get(url)
+                .then(function (response) { // Success
+                    console.log(response);
+                    $scope.menus[restaurantID] = response.data;
+                }, function (response) { // Failure
+                    console.log(response);
+                    $scope.menus[restaurantID] = {};
+                });
+        }
+
+        function getRestaurants() {
+            var protocol = $location.protocol();
+            var host     = $location.host();
+            var port     = $location.port() != 80 ? ":" + $location.port() : "";
+            var path     = "restaurants/";
+            var url      = protocol + "://" + host + port + "/" + path;
+
+            console.log("GET : " + url);
+
+            $http.get(url)
+                .then(function (response) { // Success
+                    console.log(response.data);
+                    $scope.companies = parseCompanies(response.data);
+                    $scope.data = response.data;
+                    $scope.selectedCompany = $scope.companies[0];
+                    return response.data;
+                }, function (response) { // Failure
+                    console.log("Something went wrong: " + response);
+                    return {};
+                });
+        }
 
     }).config(function ($interpolateProvider, $httpProvider) {
 

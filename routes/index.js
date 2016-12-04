@@ -16,7 +16,7 @@ router.get('/', function(req, res, next) {
     console.log(restaurants[0].restaurants[0].name);
 
     res.render('index', {
-        title: 'Student menu',
+        title: 'Opiskelijaruoka Tampereella',
         text: "",
         restaurants: getRestaurants()
     });
