@@ -2,11 +2,72 @@
 <html>
 <head>
     <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel='stylesheet' href='/stylesheets/style.css'/>
+
+    <!-- JQuery: -->
+    <script src="/vendor/jquery/jquery.min.js"></script>
+
+    <!-- Bootstrap: -->
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <script src="/vendor/bootstrap/js/bootstrap.min.js"></script>
+
+    <!-- AngularJS Javascript:-->
+    <script src="/vendor/angularjs/angular.min.js"></script>
+    <script src="/vendor/angularjs/ngStorage.min.js"></script>
+
+    <!-- CookieConsent: -->
+    <link rel="stylesheet" href="/vendor/cookieconsent/css/cookieconsent.css">
+    <script src="/vendor/cookieconsent/js/cookieconsent.js"></script>
+
+    <!-- Lobibox: -->
+    <link rel="stylesheet" href="/vendor/lobibox/css/lobibox.min.css">
+    <script src="/vendor/lobibox/js/lobibox.min.js"></script>
+
+    <!-- MomentJS: -->
+    <script src="/vendor/momentjs/moment-with-locales.min.js"></script>
 </head>
+
 <body>
+
+    <div ng-app="restaurantApp" ng-controller="restaurantCtrl">
+
+    </div>
+
 <h1><%= title %></h1>
 <p>Welcome to <%= title %></p>
 <p> <%= text %></p>
+
+<% for(var i = 0; i < restaurants.length; ++i) { %>
+
+<h2><%= restaurants[i].companyName %></h2>
+
+<% for(var j = 0; j < restaurants[i].restaurants.length; ++j) { %>
+<h4><%= restaurants[i].restaurants[j].name %></h4>
+<% } %>
+<% } %>
+
+<script>
+    'use strict';
+
+    var app = angular.module("restaurantApp", ["ngStorage"])
+            .factory('moment', function ($window) {
+                return $window.moment;
+            }).factory('lobibox', function ($window) {
+                return $window.Lobibox;
+            });
+
+    app.controller("restaurantCtrl", function ($scope, $log, $http, $location, $interval, $sessionStorage, moment) {
+        moment.locale('fi');
+
+
+    }).config(function ($interpolateProvider, $httpProvider) {
+
+    }).filter('formatPrice', function () {
+
+    });
+
+</script>
+
 </body>
 </html>
+

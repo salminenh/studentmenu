@@ -11,6 +11,10 @@ var companiesGlobal = getRestaurants();
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
+
+    var restaurants = getRestaurants();
+    console.log(restaurants[0].restaurants[0].name);
+
     res.render('index', {
         title: 'Student menu',
         text: "",
