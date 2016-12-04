@@ -123,11 +123,11 @@
         getRestaurants();
 
         $scope.getRestaurants = function (company) {
-            if ($scope.data.restaurants) {
+            if ($scope.data.companies) {
                 // Find right company:
-                for (var i = 0; i < $scope.data.restaurants.length; ++i) {
-                    if ($scope.data.restaurants[i].companyName == company) {
-                        return $scope.data.restaurants[i].restaurants;
+                for (var i = 0; i < $scope.data.companies.length; ++i) {
+                    if ($scope.data.companies[i].companyName == company) {
+                        return $scope.data.companies[i].restaurants;
                     }
                 }
             }
@@ -185,7 +185,7 @@
 
         function parseCompanies(data) {
             var companies = [];
-            data.restaurants.forEach(function (value) {
+            data.companies.forEach(function (value) {
                 if (value.hasOwnProperty("companyName")) {
                     companies.push(value.companyName);
                 }
