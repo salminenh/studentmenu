@@ -1,0 +1,19 @@
+{
+  "name"              : "studentmenu.megakoodarit.net",
+  "script"            : "bin/www",
+  "watch"             : [
+    "app.js",
+    "bin",
+    "routes",
+  ],
+  "watch_options"     : {
+    "usePolling"      : true,
+    "alwaysStat"      : true,
+    "useFsEvents"     : false
+  },
+  "ignore_watch"      : ["node_modules"],
+  "merge_logs"        : true,
+  "exec_interpreter"  : "node",
+  "autorestart"       : true,
+  "vizion"            : false
+}
