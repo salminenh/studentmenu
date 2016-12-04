@@ -39,3 +39,4 @@ jspm_packages
 /routes/temp.json
 /routes/temp2.json
 .DS_Store
+/CopyStudentMenuToMegakoodarit.sh
