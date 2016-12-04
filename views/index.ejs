@@ -2,8 +2,6 @@
 <html>
 <head>
     <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css'/>
-
     <!-- JQuery: -->
     <script src="/vendor/jquery/jquery.min.js"></script>
 
@@ -25,37 +23,77 @@
 
     <!-- MomentJS: -->
     <script src="/vendor/momentjs/moment-with-locales.min.js"></script>
+
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <link rel='stylesheet' href='/stylesheets/style.css'/>
+
 </head>
 
 <body>
-    <div ng-app="restaurantApp" ng-controller="restaurantCtrl">
-        <!-- Fixed navbar -->
-        <nav class="navbar navbar-default navbar-fixed-top">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="#"><%= title %></a>
-            </div>
-            <div id="navbar" class="navbar-collapse collapse" style="padding-right: 20px;">
-                <ul class="nav navbar-nav navbar-right">
-                    <li ng-repeat="company in companies"><a href="#" ng-click="companySelected(company)">{{ company }}</a></li>
-                </ul>
-            </div>
-        </nav>
+<div ng-app="restaurantApp" ng-controller="restaurantCtrl">
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#"><%= title %></a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse" style="padding-right: 20px;">
+            <ul class="nav navbar-nav navbar-right">
+                <li ng-repeat="company in companies"><a href="#" ng-click="companySelected(company)">{{ company }}</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
 
-        <br><br>
+    <br>
 
-        <!-- Restaurant tile: -->
-        <div ng-repeat="restaurant in restaurants" class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
-            <h4><a href="{{ menus[restaurant.restaurantId].link }}">{{ restaurant.name }}</a></h4>
-            <p>{{ restaurant }}</p>
-            <p>{{ menus[restaurant.restaurantId].set_menus }}</p>
+    <div class="row">
+        <div class="col-md-12">
+            <h3>
+                <a href="#" ng-click="weekChanged(-1)"><i class="fa fa-caret-left"></i></a>
+                Viikko {{ day.week() }}
+                <a href="#" ng-click="weekChanged(1)"><i class="fa fa-caret-right"></i></a>
+            </h3>
         </div>
     </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <span ng-repeat="day in days" ng-click="daySelected(day)">
+                <a href="#">{{ day.format("dddd") }}</a>{{ $last ? '' : ' |' }}
+            </span>
+        </div>
+    </div>
+    <br>
+
+
+    <!-- Restaurant tile: -->
+    <div ng-repeat="restaurant in restaurants" class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
+        <h4><a href="{{ menus[restaurant.restaurantId].link }}">{{ restaurant.name }}</a></h4>
+        <h5>Menu:</h5>
+
+        <div ng-repeat="menu in menus[restaurant.restaurantId].set_menus">
+            <div class="row">
+                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6"><strong>{{ menu.name }}</strong></div>
+                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6"><strong>{{ menu.price }}</strong></div>
+            </div>
+            <div class="row">
+                <ul>
+                    <li ng-repeat="component in menu.components"> {{ component }} </li>
+                </ul>
+            </div>
+        </div>
+
+        <!--<p>{{ menus[restaurant.restaurantId].set_menus }}</p>-->
+    </div>
+</div>
 
 <script>
     'use strict';
@@ -70,6 +108,9 @@
     app.controller("restaurantCtrl", function ($scope, $log, $http, $location, $interval, $sessionStorage, moment) {
         moment.locale('fi');
 
+        $scope.day = new moment().utc().hour(0).minutes(0).second(0).millisecond(0);
+        $scope.days = [];
+
         $scope.data = [];
         $scope.companies = [];
         $scope.restaurants = [];
@@ -78,13 +119,14 @@
 
         $scope.selectedCompany;
 
+        constructWeekDays();
         getRestaurants();
 
         $scope.getRestaurants = function (company) {
-            if($scope.data.restaurants) {
+            if ($scope.data.restaurants) {
                 // Find right company:
-                for(var i = 0; i<$scope.data.restaurants.length; ++i) {
-                    if($scope.data.restaurants[i].companyName == company) {
+                for (var i = 0; i < $scope.data.restaurants.length; ++i) {
+                    if ($scope.data.restaurants[i].companyName == company) {
                         return $scope.data.restaurants[i].restaurants;
                     }
                 }
@@ -94,6 +136,25 @@
 
         $scope.companySelected = function (company) {
             $scope.selectedCompany = company;
+        }
+
+        $scope.daySelected = function (day) {
+            console.log("Day changed to: " + day.format("DD.MM.YYYY"));
+            $scope.day = day;
+            for (var i = 0; i < $scope.restaurants.length; ++i) {
+                var restaurantID = $scope.restaurants[i].restaurantId;
+                getRestaurantMenu(restaurantID);
+            }
+        }
+
+        $scope.weekChanged = function (value) {
+
+            $scope.day.add(value, "w")
+            constructWeekDays();
+            $scope.daySelected($scope.day);
+
+            console.log("Week changed to: " + $scope.day.week());
+
         }
 
         $scope.$watch('selectedCompany', function () {
@@ -108,16 +169,24 @@
         $scope.$watch('restaurants', function () {
             console.log("$scope.restaurants has changed: " + $scope.restaurants);
 
-            for(var i = 0; i<$scope.restaurants.length; ++i) {
+            for (var i = 0; i < $scope.restaurants.length; ++i) {
                 var restaurantID = $scope.restaurants[i].restaurantId;
                 getRestaurantMenu(restaurantID);
             }
         }, true);
 
+        function constructWeekDays() {
+            var days = [];
+            for (var i = 0; i < 7; ++i) {
+                days.push($scope.day.clone().weekday(i))
+            }
+            $scope.days = days;
+        }
+
         function parseCompanies(data) {
             var companies = [];
             data.restaurants.forEach(function (value) {
-                if(value.hasOwnProperty("companyName")) {
+                if (value.hasOwnProperty("companyName")) {
                     companies.push(value.companyName);
                 }
             })
@@ -126,50 +195,51 @@
         }
 
         function getRestaurantMenu(restaurantID) {
-            var date = new moment().utc().hour(0).minutes(0).second(0).millisecond(0).add(1, "d");
+
+            console.log("Get menu for: " + restaurantID + ", for day: " + $scope.day.format("DD.MM.YYYY"));
 
             var protocol = $location.protocol();
-            var host     = $location.host();
-            var port     = $location.port() != 80 ? ":" + $location.port() : "";
-            var path     = "menu/" + restaurantID + "/" + date.format("YYYY-MM-DD");
-            var url      = protocol + "://" + host + port + "/" + path;
+            var host = $location.host();
+            var port = $location.port() != 80 ? ":" + $location.port() : "";
+            var path = "menu/" + restaurantID + "/" + $scope.day.format("YYYY-MM-DD");
+            var url = protocol + "://" + host + port + "/" + path;
 
             $http.get(url)
-                .then(function (response) { // Success
-                    console.log(response);
-                    $scope.menus[restaurantID] = response.data;
-                }, function (response) { // Failure
-                    console.log(response);
-                    $scope.menus[restaurantID] = {};
-                });
+                    .then(function (response) { // Success
+                        console.log(response);
+                        $scope.menus[restaurantID] = response.data;
+                    }, function (response) { // Failure
+                        console.log(response);
+                        $scope.menus[restaurantID] = {};
+                    });
         }
 
         function getRestaurants() {
             var protocol = $location.protocol();
-            var host     = $location.host();
-            var port     = $location.port() != 80 ? ":" + $location.port() : "";
-            var path     = "restaurants/";
-            var url      = protocol + "://" + host + port + "/" + path;
+            var host = $location.host();
+            var port = $location.port() != 80 ? ":" + $location.port() : "";
+            var path = "restaurants/";
+            var url = protocol + "://" + host + port + "/" + path;
 
             console.log("GET : " + url);
 
             $http.get(url)
-                .then(function (response) { // Success
-                    console.log(response.data);
-                    $scope.companies = parseCompanies(response.data);
-                    $scope.data = response.data;
-                    $scope.selectedCompany = $scope.companies[0];
-                    return response.data;
-                }, function (response) { // Failure
-                    console.log("Something went wrong: " + response);
-                    return {};
-                });
+                    .then(function (response) { // Success
+                        console.log(response.data);
+                        $scope.companies = parseCompanies(response.data);
+                        $scope.data = response.data;
+                        $scope.selectedCompany = $scope.companies[0];
+                        return response.data;
+                    }, function (response) { // Failure
+                        console.log("Something went wrong: " + response);
+                        return {};
+                    });
         }
 
     }).config(function ($interpolateProvider, $httpProvider) {
 
-    }).filter('formatPrice', function () {
-
+    }).filter('toWeekday', function (date) {
+        return date.format("dddd");
     });
 
 </script>
