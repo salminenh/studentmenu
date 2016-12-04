@@ -139,7 +139,6 @@
         }
 
         $scope.daySelected = function (day) {
-            console.log("Day changed to: " + day.format("DD.MM.YYYY"));
             $scope.day = day;
             for (var i = 0; i < $scope.restaurants.length; ++i) {
                 var restaurantID = $scope.restaurants[i].restaurantId;
@@ -148,27 +147,16 @@
         }
 
         $scope.weekChanged = function (value) {
-
             $scope.day.add(value, "w")
             constructWeekDays();
             $scope.daySelected($scope.day);
-
-            console.log("Week changed to: " + $scope.day.week());
-
         }
 
         $scope.$watch('selectedCompany', function () {
-            console.log("$scope.selectedCompany has changed: " + $scope.selectedCompany);
             $scope.restaurants = $scope.getRestaurants($scope.selectedCompany);
-
-            console.log($scope.restaurants);
-
-            // TODO: change company view:
         }, true);
 
         $scope.$watch('restaurants', function () {
-            console.log("$scope.restaurants has changed: " + $scope.restaurants);
-
             for (var i = 0; i < $scope.restaurants.length; ++i) {
                 var restaurantID = $scope.restaurants[i].restaurantId;
                 getRestaurantMenu(restaurantID);
@@ -190,14 +178,10 @@
                     companies.push(value.companyName);
                 }
             })
-            console.log(companies);
             return companies;
         }
 
         function getRestaurantMenu(restaurantID) {
-
-            console.log("Get menu for: " + restaurantID + ", for day: " + $scope.day.format("DD.MM.YYYY"));
-
             var protocol = $location.protocol();
             var host = $location.host();
             var port = $location.port() != 80 ? ":" + $location.port() : "";
@@ -206,10 +190,8 @@
 
             $http.get(url)
                     .then(function (response) { // Success
-                        console.log(response);
                         $scope.menus[restaurantID] = response.data;
                     }, function (response) { // Failure
-                        console.log(response);
                         $scope.menus[restaurantID] = {};
                     });
         }
@@ -221,17 +203,13 @@
             var path = "restaurants/";
             var url = protocol + "://" + host + port + "/" + path;
 
-            console.log("GET : " + url);
-
             $http.get(url)
                     .then(function (response) { // Success
-                        console.log(response.data);
                         $scope.companies = parseCompanies(response.data);
                         $scope.data = response.data;
                         $scope.selectedCompany = $scope.companies[0];
                         return response.data;
                     }, function (response) { // Failure
-                        console.log("Something went wrong: " + response);
                         return {};
                     });
         }
