@@ -156,18 +156,15 @@ router.get('/all/menus/:date', function(req, res, next) {
     };
 
     getAllAmicaMenus(date, menus).then( function(menus) {
-        //getAllJuvenesMenus(date, menus).then( function(menus) {
+        getAllJuvenesMenus(date, menus).then( function(menus) {
             getAllSodexoMenus(date, menus).then( function(menus) {
-                for(var i = 0; i < menus.Juvenes.length; ++i ) {
-                    menus.Juvenes[i] = juvenesMenuToGlobalFormat(JSON.stringify(menus.Juvenes[i]));
-                }
                 return res.status(200).json({menus: menus});
             }).catch( function(err) {
                 return res.status(500).json({error: err.message});
             });
-        /*}).catch( function(err) {
+        }).catch( function(err) {
             return res.status(500).json({error: err.message});
-        });*/
+        });
     }).catch( function(err) {
         return res.status(500).json({error: err.message});
     });
@@ -277,7 +274,6 @@ function getJuvenesMenu(restaurantId, date) {
                 }
             }
         }
-
 
         var options = {
             host: 'www.juvenes.fi',
@@ -432,13 +428,12 @@ function getAllJuvenesMenus(date, menus) {
 
             var req = http.request(options, function (response) {
                 var str = '';
-
                 response.on('data', function (chunk) {
                     str += chunk;
                 });
 
                 response.on('end', function () {
-                    menus.Juvenes.push(JSON.parse((str.slice(1, str.length).slice(0, str.length-3))));
+                    menus.Juvenes.push(juvenesMenuToGlobalFormat(JSON.parse(str.slice(1, str.length).slice(0, str.length-3))));
                     if(JuvenesRestaurants.length === menus.Juvenes.length) {
                         fulfill(menus);
                     }
@@ -500,7 +495,7 @@ function getAllAmicaMenus(date, menus) {
 
 // Formats in all these are like:
 
-var new_format_menu = {
+var empty_format_menu = {
     restaurant: "",
     link: "",
     open_hours: "",
@@ -518,21 +513,25 @@ var new_format_menu = {
 function amicaMenuToGlobalFormat(menu) {
 
     var new_format_menu = {
-        restaurant: menu.RestaurantName,
-        link: menu.RestaurantUrl,
-        open_hours: menu.MenusForDays[0].LunchTime,
+        restaurant: menu.RestaurantName || "",
+        link: menu.RestaurantUrl || "",
+        open_hours: "",
         set_menus: []
     };
+    if(menu.MenusForDays && menu.MenusForDays.length > 0) {
+        new_format_menu.open_hours = menu.MenusForDays[0].LunchTime
 
-    for(var i = 0; i < menu.MenusForDays[0].SetMenus.length; ++i) {
-        var setMenu = {};
-        var value = menu.MenusForDays[0].SetMenus[i];
-        setMenu.name = value.Name;
-        setMenu.price = value.Price;
-        setMenu.components = value.Components;
-        setMenu.diets = "";
-        new_format_menu.set_menus.push(setMenu);
+        for(var i = 0; i < menu.MenusForDays[0].SetMenus.length; ++i) {
+            var setMenu = {};
+            var value = menu.MenusForDays[0].SetMenus[i];
+            setMenu.name = value.Name;
+            setMenu.price = value.Price;
+            setMenu.components = value.Components;
+            setMenu.diets = "";
+            new_format_menu.set_menus.push(setMenu);
+        }
     }
+
     return new_format_menu;
 }
 
@@ -561,28 +560,34 @@ function sodexoMenuToGlobalFormat(menu) {
 // Change Juvenes menu to wanted format
 function juvenesMenuToGlobalFormat(menu) {
 
-    parsed_menu = JSON.parse(menu['d']);
-    var new_format_menu = {
-        restaurant: parsed_menu.KitchenName || "",
-        link: "",
-        open_hours: "",
-        set_menus: []
-    };
+    if(menu.d) {
+        parsed_menu = JSON.parse(menu['d']);
 
-    for(var i = 0; i < parsed_menu.MealOptions.length; ++i) {
-        var setMenu = {};
-        var value = parsed_menu.MealOptions[i];
-        setMenu.name = value.Name;
-        setMenu.price = value.Price;
-        setMenu.components = [];
-        for( var j = 0; j < value.MenuItems.length; ++j) {
-            var menuItem = value.MenuItems[j];
-            setMenu.components.push(menuItem.Name + ", (" + menuItem.Diets +")");
+        var new_format_menu = {
+            restaurant: parsed_menu.KitchenName || "",
+            link: "",
+            open_hours: "",
+            set_menus: []
+        };
+
+        for (var i = 0; i < parsed_menu.MealOptions.length; ++i) {
+            var setMenu = {};
+            var value = parsed_menu.MealOptions[i];
+            setMenu.name = value.Name;
+            setMenu.price = value.Price;
+            setMenu.components = [];
+            for (var j = 0; j < value.MenuItems.length; ++j) {
+                var menuItem = value.MenuItems[j];
+                setMenu.components.push(menuItem.Name + ", (" + menuItem.Diets + ")");
+            }
+            setMenu.diets = "";
+            new_format_menu.set_menus.push(setMenu);
         }
-        setMenu.diets = "";
-        new_format_menu.set_menus.push(setMenu);
+        return new_format_menu;
+    } else {
+        return {};
     }
-    return new_format_menu;
+
 }
 
 // ********************************************************************************************************************
@@ -620,8 +625,6 @@ function getLocation(address, number, postalcode, city) {
         });
     });
 }
-
-
 
 
 module.exports = router;
