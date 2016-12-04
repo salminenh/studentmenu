@@ -38,3 +38,4 @@ jspm_packages
 .idea
 /routes/temp.json
 /routes/temp2.json
+.DS_Store
