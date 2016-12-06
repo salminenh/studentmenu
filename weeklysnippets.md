@@ -23,8 +23,10 @@
 
 ## Daniel
 #### What I did
+* Planned the project together with the group
 
 #### What I planned for week 46
+* Planned on helping with the project plan and planning
 
 
 # Week 46
@@ -50,8 +52,11 @@
 
 ## Daniel
 #### What I did
+* Finishing the project plan with the group
 
 #### What I planned for week 47
+* Planned on starting the project when plan is accepted
+
 
 # Week 47
 ## Mikko
@@ -76,8 +81,10 @@
 
 ## Daniel
 #### What I did
+* Helped the group with ideas and specifications
 
 #### What I planned for week 48
+* Planned on how to test the api
 
 
 # Week 48
@@ -99,7 +106,10 @@
 * Setup PM2 to manage demo app
 * Published demo app on http://studentmenu.megakoodarit.net
 
-
 ## Daniel
 #### What I did
+* Tested both our api and front end implementation of it
+* Testing was done by using different dates and input on apis
+* No major issues was found.
+
 
