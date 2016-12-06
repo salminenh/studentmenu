@@ -9,6 +9,7 @@ var path = require('path');
 
 var companiesGlobal = getRestaurants();
 
+moment.locale("fi");
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -260,7 +261,7 @@ function getJuvenesMenu(restaurantId, date) {
 
     return new Promise( function(fulfill, reject) {
 
-        var day = moment(date);
+        var day = moment(date).locale("fi");
         var companies = getRestaurants();
         var menuTypeId;
 
@@ -275,11 +276,13 @@ function getJuvenesMenu(restaurantId, date) {
             }
         }
 
+        var dayInt = day.isoWeekday();
+
         var options = {
             host: 'www.juvenes.fi',
             path: "/DesktopModules/Talents.LunchMenu/LunchMenuServices.asmx/GetMenuByWeekday?KitchenId=" +
             restaurantId + "&MenuTypeId=" + menuTypeId + "&Week=" + day.week()
-            + "&Weekday=" + day.day() +"&lang=%27fi%27&format=json",
+            + "&Weekday=" + dayInt +"&lang=%27fi%27&format=json",
             method: 'GET'
         };
 
