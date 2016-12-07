@@ -270,7 +270,7 @@
           },
           {
             "group": "Success 200",
-            "type": "Number",
+            "type": "String",
             "optional": false,
             "field": "restaurantId",
             "description": "<p>Id of the restaurant</p>"
@@ -281,6 +281,13 @@
             "optional": false,
             "field": "menu",
             "description": "<p>Menu type id of the restaurant. Only with Juvenes restaurants.</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "location",
+            "description": "<p>Location of the restaurant, basically university where it is.</p>"
           }
         ]
       }
@@ -340,10 +347,82 @@
           },
           {
             "group": "Success 200",
-            "type": "Number",
+            "type": "String",
             "optional": false,
             "field": "companies.restaurants.restaurantId",
             "description": "<p>Id of the restaurant</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
+            "field": "companies.restaurants.menu",
+            "description": "<p>menu of the restaurant (Only Juvenes)</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "companies.restaurants.location",
+            "description": "<p>location of the restaurant</p>"
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "routes/index.js",
+    "groupTitle": "Restaurants"
+  },
+  {
+    "type": "get",
+    "url": "/restaurants/byuniversity/:university",
+    "title": "Request restaurants and their information",
+    "name": "GetRestaurantsByUniversity",
+    "group": "Restaurants",
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "Object[]",
+            "optional": false,
+            "field": "companies",
+            "description": "<p>Array of restaurants from the university campus</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "restaurants",
+            "description": "<p>Restaurants of the company in Tampere</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "restaurants.name",
+            "description": "<p>Name of the restaurant</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "restaurants.restaurantId",
+            "description": "<p>Id of the restaurant</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
+            "field": "restaurants.menu",
+            "description": "<p>menu of the restaurant (Only Juvenes)</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
+            "field": "restaurants.location",
+            "description": "<p>location of the restaurant</p>"
           }
         ]
       }

@@ -15,7 +15,6 @@ moment.locale("fi");
 router.get('/', function(req, res, next) {
 
     var restaurants = getRestaurants();
-    console.log(restaurants[0].restaurants[0].name);
 
     res.render('index', {
         title: 'Opiskelijaruoka Tampereella',
@@ -33,14 +32,48 @@ router.get('/', function(req, res, next) {
  *
  * @apiSuccess {Object[]} companies Array of companies
  * @apiSuccess {String} companies.companyName  Name of the company
- * @apiSuccess {String} companies.companyName  Name of the company
  * @apiSuccess {String} companies.restaurants  Restaurants of the company in Tampere
  * @apiSuccess {String} companies.restaurants.name  Name of the restaurant
- * @apiSuccess {Number} companies.restaurants.restaurantId  Id of the restaurant
+ * @apiSuccess {String} companies.restaurants.restaurantId  Id of the restaurant
+ * @apiSuccess {Number} companies.restaurants.menu  menu of the restaurant (Only Juvenes)
+ * @apiSuccess {String} companies.restaurants.location location of the restaurant
+ *
  *
  */
 router.get('/restaurants', function(req, res, next) {
-    return res.status(200).json({companies: getRestaurants()});
+    return res.status(200).json({companies: companiesGlobal});
+});
+
+
+/* GET all the restaurants. */
+/**
+ * @api {get} /restaurants/byuniversity/:university Request restaurants and their information
+ * @apiName GetRestaurantsByUniversity
+ * @apiGroup Restaurants
+ *
+ *
+ * @apiSuccess {Object[]} companies Array of restaurants from the university campus
+ * @apiSuccess {String} restaurants  Restaurants of the company in Tampere
+ * @apiSuccess {String} restaurants.name  Name of the restaurant
+ * @apiSuccess {String} restaurants.restaurantId  Id of the restaurant
+ * @apiSuccess {Number} restaurants.menu  menu of the restaurant (Only Juvenes)
+ * @apiSuccess {Number} restaurants.location location of the restaurant
+ *
+ */
+router.get('/restaurants/byuniversity/:university', function(req, res, next) {
+
+    var universityRestaurants = [];
+    var university = req.params['university'];
+
+    for(var i = 0; i < companiesGlobal.length; ++i) {
+        for(var j = 0; j < companiesGlobal[i].restaurants.length; ++j) {
+            if(university === companiesGlobal[i].restaurants[j].location) {
+                universityRestaurants.push(companiesGlobal[i].restaurants[j]);
+            }
+        }
+    }
+
+    return res.status(200).json({restaurants: universityRestaurants});
 });
 
 
@@ -53,8 +86,9 @@ router.get('/restaurants', function(req, res, next) {
  * @apiParam  {Number} restaurantid Restaurants unique ID.
  *
  * @apiSuccess {String} name  Name of the restaurant
- * @apiSuccess {Number} restaurantId Id of the restaurant
+ * @apiSuccess {String} restaurantId Id of the restaurant
  * @apiSuccess {Number} menu Menu type id of the restaurant. Only with Juvenes restaurants.
+ * @apiSuccess {String} location Location of the restaurant, basically university where it is.
  *
  * @apiError RestaurantNotFound  Restaurant not found.
  */
@@ -210,30 +244,30 @@ function whatRestaurantCompany(restaurantId) {
 function getRestaurants() {
 
     // Amica restaurants
-    var Reaktori = {name: "Reaktori", restaurantId: "0812", menu: "" };
-    var Minerva = {name: "Minerva", restaurantId: "0815", menu: "" };
-    var Pirteria = {name: "Pirteria", restaurantId: "0823", menu: "" };
+    var Reaktori = {name: "Reaktori", restaurantId: "0812", menu: "", location: "TTY"};
+    var Minerva = {name: "Minerva", restaurantId: "0815", menu: "", location: "TAY"};
+    var Pirteria = {name: "Pirteria", restaurantId: "0823", menu: "", location: "OTHER"};
 
     // Fills the restaurant infos here
     // Juvenes restaurants
-    var Newton = {name: "Newton", restaurantId: "6", menu: "60" };
-    //var TAYravintola = {name: "Yliopiston Ravintola", restaurantId: "13", menu: "6" };
-    //var TAYravintolaVEGE = {name: "Yliopiston Ravintola / VegeBar", restaurantId: "13", menu: "5" };
-    var TAYCafeCampus = {name: "Café Campus", restaurantId: "130019", menu: "23" };
-    var CafePinni = {name: "Café Pinni", restaurantId: "130016", menu: "60"};
-    var Arvo = {name: 'Arvo', restaurantId: "5", menu: "60"};
-    var CafeLeaFusion = {name: "Café Lea (Fusion Kitchen)", restaurantId: "50026", menu: "3"};
-    //var CafeLeaSalad = {name: "Café Lea (My Salad)", restaurantId: "50026", menu: "76"};
-    var KonehuoneSaas = {name: "Café Konehuone / Såås bar", restaurantId: "60038", menu: "77" };
-    //var KonehuoneFusion = {name: "Café Konehuone / Fusion", restaurantId: "60038", menu: "3" };
-    var Ziberia = {name: "Ziberia", restaurantId: "11", menu: "60" };
-    var Frenckell = {name: "Frenckell", restaurantId: "33", menu: "60"};
-    //var FrenckellSaas = {name: "Frenckell / Såås Bar", restaurantId: "33", menu: "77" };
+    var Newton = {name: "Newton", restaurantId: "6_60", menu: "60", location: "TTY" };
+    var TAYravintola = {name: "Yliopiston Ravintola", restaurantId: "13_60", menu: "60", location: "TAY" };
+    var TAYravintolaVEGE = {name: "Yliopiston Ravintola / VegeBar", restaurantId: "13_5", menu: "5", location: "TAY" };
+    var TAYCafeCampus = {name: "Café Campus", restaurantId: "130019_23", menu: "23", location: "TAY" };
+    var CafePinni = {name: "Café Pinni", restaurantId: "130016_60", menu: "60", location: "TAY"};
+    var Arvo = {name: 'Arvo', restaurantId: "5_60", menu: "60", location: "TAYS"};
+    var CafeLeaFusion = {name: "Café Lea (Fusion Kitchen)", restaurantId: "50026_3", menu: "3", location: "TAYS"};
+    var CafeLeaSalad = {name: "Café Lea (My Salad)", restaurantId: "50026_76", menu: "76", location: "TAYS"};
+    var KonehuoneSaas = {name: "Café Konehuone / Såås bar", restaurantId: "60038_77", menu: "77" , location: "TTY"};
+    var KonehuoneFusion = {name: "Café Konehuone / Fusion", restaurantId: "60038_3", menu: "3", location: "TTY" };
+    var Ziberia = {name: "Ziberia", restaurantId: "11_60", menu: "60", location: "OTHER" };
+    var Frenckell = {name: "Frenckell", restaurantId: "33_60", menu: "60", location: "OTHER"};
+    var FrenckellSaas = {name: "Frenckell / Såås Bar", restaurantId: "33_77", menu: "77", location: "OTHER" };
 
     // Sodexo restaurants
-    var Hertsi = {name: "Hertsi", restaurantId: "12812", menu: "" };
-    var Linna = {name: "Linna", restaurantId: "92", menu: "" };
-    var Erkkeri = {name: "Erkkeri", restaurantId: "100", menu: "" };
+    var Hertsi = {name: "Hertsi", restaurantId: "12812", menu: "", location: "TTY" };
+    var Linna = {name: "Linna", restaurantId: "92", menu: "", location: "TAY" };
+    var Erkkeri = {name: "Erkkeri", restaurantId: "100", menu: "", location: "OTHER" };
 
 
     return [{
@@ -241,9 +275,9 @@ function getRestaurants() {
         restaurants: [Reaktori, Minerva, Pirteria]
     }, {
         companyName: "Juvenes",
-        restaurants: [Newton, /*TAYravintola, /*TAYravintolaVEGE,*/ TAYCafeCampus, CafePinni, Arvo,
-            CafeLeaFusion, /*CafeLeaSalad, KonehuoneFusion,*/
-            KonehuoneSaas, Ziberia, Frenckell/*, FrenckellSaas*/]
+        restaurants: [Newton, TAYravintola, TAYravintolaVEGE, TAYCafeCampus, CafePinni, Arvo,
+            CafeLeaFusion, CafeLeaSalad, KonehuoneFusion,
+            KonehuoneSaas, Ziberia, Frenckell, FrenckellSaas]
     }, {
         companyName: "Sodexo",
         restaurants: [Hertsi, Linna, Erkkeri]
@@ -262,26 +296,15 @@ function getJuvenesMenu(restaurantId, date) {
     return new Promise( function(fulfill, reject) {
 
         var day = moment(date).locale("fi");
-        var companies = getRestaurants();
-        var menuTypeId;
-
-        for (var i = 0; i < companies.length; ++i) {
-            if(companies[i].companyName === "Juvenes") {
-                for (var j = 0; j < companies[i].restaurants.length; ++j) {
-                    if (restaurantId === companies[i].restaurants[j].restaurantId) {
-                        menuTypeId = companies[i].restaurants[j].menu;
-                        break;
-                    }
-                }
-            }
-        }
+        var restaurantId_parsed = restaurantId.split('_')[0];
+        var menuTypeId_parsed = restaurantId.split('_')[1];
 
         var dayInt = day.isoWeekday();
 
         var options = {
             host: 'www.juvenes.fi',
             path: "/DesktopModules/Talents.LunchMenu/LunchMenuServices.asmx/GetMenuByWeekday?KitchenId=" +
-            restaurantId + "&MenuTypeId=" + menuTypeId + "&Week=" + day.week()
+            restaurantId_parsed + "&MenuTypeId=" + menuTypeId_parsed + "&Week=" + day.week()
             + "&Weekday=" + dayInt +"&lang=%27fi%27&format=json",
             method: 'GET'
         };

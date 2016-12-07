@@ -46,6 +46,10 @@
         </div>
         <div id="navbar" class="navbar-collapse collapse" style="padding-right: 20px;">
             <ul class="nav navbar-nav navbar-right">
+                <li ng-repeat="university in universities"><a href="#" ng-click="universitySelected(university)">{{ university }}</a>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
                 <li ng-repeat="company in companies"><a href="#" ng-click="companySelected(company)">{{ company }}</a>
                 </li>
             </ul>
@@ -114,10 +118,12 @@
         $scope.data = [];
         $scope.companies = [];
         $scope.restaurants = [];
+        $scope.universities = ["TTY", "TAY", "TAYS", "OTHER"];
 
         $scope.menus = {};
 
         $scope.selectedCompany;
+        $scope.selectedUniversity;
 
         constructWeekDays();
         getRestaurants();
@@ -133,9 +139,28 @@
             }
             return [];
         }
+        $scope.getUniversityRestaurants = function (university) {
+
+            var protocol = $location.protocol();
+            var host = $location.host();
+            var port = $location.port() != 80 ? ":" + $location.port() : "";
+            var path = "restaurants/byuniversity/" + university;
+            var url = protocol + "://" + host + port + "/" + path;
+
+            $http.get(url)
+                  .then(function (response) { // Success
+                        $scope.restaurants = response.data.restaurants;
+                    }, function (response) { // Failure
+                        return [];
+                    });
+        }
 
         $scope.companySelected = function (company) {
             $scope.selectedCompany = company;
+        }
+
+        $scope.universitySelected = function (university) {
+            $scope.selectedUniversity = university;
         }
 
         $scope.daySelected = function (day) {
@@ -154,6 +179,10 @@
 
         $scope.$watch('selectedCompany', function () {
             $scope.restaurants = $scope.getRestaurants($scope.selectedCompany);
+        }, true);
+
+        $scope.$watch('selectedUniversity', function () {
+            $scope.restaurants = $scope.getUniversityRestaurants($scope.selectedUniversity);
         }, true);
 
         $scope.$watch('restaurants', function () {
