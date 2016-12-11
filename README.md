@@ -2,6 +2,8 @@
 
 API for student restaurant locations and menus in Tampere.
 
+The example application is hosted at: http://studentmenu.megakoodarit.net/
+
 ## Introduction
 
 The project consists of implementing an API that provides information about student restaurants in Tampere. API will provide the locations and menus of the restaurants. The menu data will be retrieved from restaurants own open APIs.
@@ -14,7 +16,7 @@ Node.js and npm must be installed
 
 > run **git clone https://github.com/salminenh/studentmenu.git**
 >
-> go to folder**studentmenu**
+> go to folder **studentmenu**
 >
 > run **npm install**
 >
@@ -27,11 +29,11 @@ Node.js and npm must be installed
 
 ## Authors
 
-* **Mikko Knuuttila** - *Project manager* - [miksakki](https://github.com/miksakki)
+* **Mikko Knuuttila, mikko.knuuttila [at] student.tut.fi** - *Project manager* - [miksakki](https://github.com/miksakki)
 
-* **Henri Salminen** - *Tech leader* - [salminenh](https://github.com/salminenh)
+* **Henri Salminen, henri.salminen [at] student.tut.fi*** - *Tech leader* - [salminenh](https://github.com/salminenh)
 
-* **Daniel Kullberg** - *QA leader* - [dauni0](https://github.com/dauni0)
+* **Daniel Kullberg, daniel.kullberg [at] student.tut.fi*** - *QA leader* - [dauni0](https://github.com/dauni0)
 
 See also the list of [contributors](https://github.com/salminenh/studentmenu/contributors) who participated in this project.
 
@@ -49,13 +51,16 @@ The example application, that uses the implemented API, will be made by using HT
 
 Jetbrains Webstorm is the IDE that will be used for web development.
 
+## Documentation
+
+See http://studentmenu.megakoodarit.net/api_documentation for API docs.
+
 ## Used APIs
 
 We will use following APIs:
 * **Amica API (http://apisuomi.fi/shop/json/amica-ruokalistat-api/)**
 * **Juvenes API**
 * **Sodexo API**
-
 
 ## Project schedule
 
